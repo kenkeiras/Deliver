@@ -105,6 +105,10 @@ public class MapActivity extends Activity{
                                 });
 
                             fMapView.getOverlays().add(currentLocationOverlay);
+
+                            // Forzar actualización
+                            fMapView.getController().scrollBy(1, 1);
+                            fMapView.getController().scrollBy(-1, -1);
                             return true;
                         }
                         else{
