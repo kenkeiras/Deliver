@@ -41,7 +41,11 @@ public class MapActivity extends Activity{
     Context context = null;
     long lastTouchTime = -1;
 
-    private static long  DOUBLE_CLICK_TIMEOUT = 250;
+    // Timeout del doble click
+    private static final long DOUBLE_CLICK_TIMEOUT = 250;
+
+    // Punto en el que inicia la aplicación (Coruña)
+    private static final GeoPoint INITIAL_POINT = new GeoPoint(43.365126,-8.411951);
 
     /**
      * Genera un GeoPoint a partir de un IGeoPoint.
@@ -60,10 +64,9 @@ public class MapActivity extends Activity{
     private void setupMapView(){
         MapView mapView = (MapView) findViewById(R.id.mapView);
 
-        mapView.setBuiltInZoomControls(true);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(13);
-        mapView.getController().setCenter(new GeoPoint(43.365126,-8.411951));
+        mapView.getController().setCenter(INITIAL_POINT);
 
         // Se guarda el último lugar donde se tocó la pantalla
         // Con dos clicks se pregunta por los datos para poner un marcador (por ahora simplemente se deja)
