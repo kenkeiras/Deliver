@@ -6,4 +6,8 @@
     <string name="task_to_do">Tarea a realizar</string>
     <string name="proceed">Continuar</string>
     <string name="cancel">Cancelar</string>
+    <string name="choose_action">Elige una acción</string>
+    <string name="toggle">Completado/Incompleto</string>
+    <string name="remove">Eliminar</string>
+    <string name="edit">Editar</string>
 </resources>

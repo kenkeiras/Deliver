@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.ContentValues;
+import android.content.res.Resources;
 import android.os.Bundle;
 
 import android.graphics.Canvas;
@@ -121,6 +122,63 @@ public class MapActivity extends Activity{
                 }
             });
         taskNameDialog.show();
+    }
+
+
+    /**
+     * A partir del índice de búsqueda devuelve el ID de un elemento.
+     *
+     * @param index Número que ocupa el documento en la query.
+     *
+     */
+    public int getIdFromIndex(int index){
+       Cursor c = sqldb.query(DB_NAME, sqlcols,
+                               null, null, null, null, null, index + ", 1");
+
+       c.moveToFirst();
+       final int id = c.getInt(c.getColumnIndex("_id"));
+       c.close();
+
+       return id;
+    }
+
+
+    /**
+     * Edita un elemento.
+     *
+     * @param index Índice del elemento a editar.
+     *
+     */
+    public void editElement(int index){
+        Resources res = getResources();
+        final int id = getIdFromIndex(index);
+
+        final CharSequence[] actions = {res.getString(R.string.toggle),
+                                        res.getString(R.string.remove),
+                                        res.getString(R.string.edit)};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(res.getString(R.string.choose_action));
+        builder.setItems(actions, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    switch(which){
+                    case 0:
+                        sqldb.execSQL("UPDATE " + DB_NAME +" SET " +
+                                      "COMPLETED = NOT COMPLETED " +
+                                      "WHERE _ID = " + id);
+                        break;
+                    case 1:
+                        sqldb.execSQL("DELETE FROM " + DB_NAME +
+                                      " WHERE _ID = " + id);
+                        break;
+                    case 2:
+                        Log.d("Deliver", "Edición no implementada");
+                    }
+                    updateTargetsOverlay();
+                }
+            });
+
+        builder.create().show();
 
     }
 
@@ -152,18 +210,30 @@ public class MapActivity extends Activity{
         }
         c.close();
 
-        ItemizedIconOverlay currentLocationOverlay = new ItemizedIconOverlay<OverlayItem>(
+        ItemizedIconOverlay itemOverlay = new ItemizedIconOverlay<OverlayItem>(
             context, items,
             new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                @Override
                 public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+                    Toast.makeText(
+                        context,
+                        item.mDescription + "\n" + item.mTitle + "\n"
+                        + item.mGeoPoint.getLatitudeE6() + " : "
+                        + item.mGeoPoint.getLongitudeE6(),
+                        Toast.LENGTH_LONG).show();
+
+                    editElement(index);
+                    Log.d("Deliver", "" + index);
                     return true;
                 }
+
+                @Override
                 public boolean onItemLongPress(final int index, final OverlayItem item) {
-                    return true;
+                    return false;
                 }
             });
 
-        mapView.getOverlays().add(currentLocationOverlay);
+        mapView.getOverlays().add(itemOverlay);
 
         // Forzar actualización del canvas
         mapView.getController().scrollBy(1, 1);
