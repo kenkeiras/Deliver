@@ -1,32 +1,131 @@
 package com.codigoparallevar.deliver;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
+
+import android.util.Log;
+
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.LinearLayout;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+import org.osmdroid.api.IGeoPoint;
+
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.MapView.LayoutParams;
+import org.osmdroid.views.overlay.OverlayItem;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.util.GeoPoint;
+
+
+
 
 /**
  * Implementa un mapa que indica las posiciones apoyandose en OpenStreetMap.
  *
  */
 public class MapActivity extends Activity{
+
+    Context context = null;
+    long lastTouchTime = -1;
+
+    private static long  DOUBLE_CLICK_TIMEOUT = 250;
+
+    /**
+     * Genera un GeoPoint a partir de un IGeoPoint.
+     *
+     */
+    public static GeoPoint geoPointFromIGeoPoint(IGeoPoint igp){
+        return new GeoPoint(igp.getLatitudeE6(),
+                            igp.getLongitudeE6());
+    }
+
+
+    /**
+     * Prepara el MapView para la acción.
+     *
+     */
+    private void setupMapView(){
+        MapView mapView = (MapView) findViewById(R.id.mapView);
+
+        mapView.setBuiltInZoomControls(true);
+        mapView.setMultiTouchControls(true);
+        mapView.getController().setZoom(13);
+        mapView.getController().setCenter(new GeoPoint(43.365126,-8.411951));
+
+        // Se guarda el último lugar donde se tocó la pantalla
+        // Con dos clicks se pregunta por los datos para poner un marcador (por ahora simplemente se deja)
+        final MapView fMapView = mapView;
+        mapView.setOnTouchListener(new View.OnTouchListener(){
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    int X = (int)event.getX();
+                    int Y = (int)event.getY();
+
+                    long time = System.currentTimeMillis();
+
+                    Log.d("Deliver", "" + (time - lastTouchTime));
+
+                    if (event.getAction() == MotionEvent.ACTION_DOWN){
+                        if ((time - lastTouchTime) < DOUBLE_CLICK_TIMEOUT){
+                            lastTouchTime = -1;
+
+                            IGeoPoint geoPoint = fMapView.getProjection().fromPixels(X, Y);
+
+                            OverlayItem overlayItem = new OverlayItem("Here", "Current Position",
+                                                                      geoPointFromIGeoPoint(geoPoint));
+
+                            Drawable locationMarker = context.getResources().getDrawable(R.drawable.marker);
+                            overlayItem.setMarker(locationMarker);
+
+                            final ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
+                            items.add(overlayItem);
+
+                            ItemizedIconOverlay currentLocationOverlay = new ItemizedIconOverlay<OverlayItem>(
+                                context, items,
+                                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+                                        return true;
+                                    }
+                                    public boolean onItemLongPress(final int index, final OverlayItem item) {
+                                        return true;
+                                    }
+                                });
+
+                            fMapView.getOverlays().add(currentLocationOverlay);
+                            return true;
+                        }
+                        else{
+                            lastTouchTime = time;
+                        }
+
+                    }
+                    return false;
+                }
+            });
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        this.getResources().getDrawable(R.drawable.marker);
 
-        MapView mapView = new MapView(this, 256);
-        mapView.setClickable(true);
-        mapView.setBuiltInZoomControls(true);
-
-        mapView.getController().setZoom(13);
-        mapView.getController().setCenter(new GeoPoint(43.365126,-8.411951));
-
-        setContentView(mapView);
+        context = getApplicationContext();
+        setContentView(R.layout.map);
+        setupMapView();
     }
+
 }
