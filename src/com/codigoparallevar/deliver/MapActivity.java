@@ -135,18 +135,21 @@ public class MapActivity extends Activity{
      *
      */
     private void updateTargetsOverlay(MapView mapView){
-        Drawable locationMarker = context.getResources().getDrawable(R.drawable.marker);
+        Drawable cLocationMarker = context.getResources().getDrawable(R.drawable.completed_marker);
+        Drawable uLocationMarker = context.getResources().getDrawable(R.drawable.uncompleted_marker);
 
         final ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
         Cursor c = sqldb.query(DB_NAME, sqlcols, null, null, null, null, null, null);
         if (c.moveToFirst()){
             do{
-                OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(c.getInt(4) != 0 ?
+                boolean completed = c.getInt(4) != 0;
+
+                OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(completed ?
                                                                                     R.string.completed_task :
                                                                                     R.string.uncompleted_task),
                                                           new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
 
-                overlayItem.setMarker(locationMarker);
+                overlayItem.setMarker(completed ? cLocationMarker: uLocationMarker);
                 items.add(overlayItem);
             }while (c.moveToNext());
         }
@@ -229,7 +232,6 @@ public class MapActivity extends Activity{
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        this.getResources().getDrawable(R.drawable.marker);
 
         context = getApplicationContext();
         setContentView(R.layout.map);
