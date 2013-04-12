@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Deliver</string>
+    <string name="completed_task">Completa</string>
+    <string name="uncompleted_task">Incompleta</string>
+    <string name="task_to_do">Tarea a realizar</string>
+    <string name="proceed">Continuar</string>
+    <string name="cancel">Cancelar</string>
 </resources>

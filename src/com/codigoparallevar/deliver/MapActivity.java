@@ -1,7 +1,9 @@
 package com.codigoparallevar.deliver;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.ContentValues;
 import android.os.Bundle;
 
@@ -15,7 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.LinearLayout;
+import android.widget.*;
 
 import android.database.sqlite.*;
 import android.database.Cursor;
@@ -44,7 +46,7 @@ public class MapActivity extends Activity{
 
     static SQLiteDatabase sqldb;
     public static String DB_NAME = "DELIVER_DB";
-    static String[] sqlcols = new String[]{"_id", "LATITUDE", "LONGITUDE"};
+    static String[] sqlcols = new String[]{"_id", "LATITUDE", "LONGITUDE", "TASK", "COMPLETED"};
 
     Context context = null;
     long lastTouchTime = -1;
@@ -77,7 +79,8 @@ public class MapActivity extends Activity{
         // Crea la tabla si no existe
         sqldb.execSQL("CREATE TABLE IF NOT EXISTS " + DB_NAME +
                       " ( _id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                      " LATITUDE LONG, LONGITUDE LONG);");
+                      " LATITUDE LONG, LONGITUDE LONG, " +
+                      " TASK VARCHAR, COMPLETED BOOLEAN);");
 
     }
 
@@ -86,14 +89,42 @@ public class MapActivity extends Activity{
      * Añade un punto a los objetivos.
      *
      * @param gp Las coordenadas del punto a añadir.
+     * @param mapView El mapa a actualizar si se añade.
      *
      */
-    private void addPoint(IGeoPoint gp){
-        ContentValues cv = new ContentValues(2);
-        cv.put("LATITUDE", gp.getLatitudeE6());
-        cv.put("LONGITUDE", gp.getLongitudeE6());
+    private void addPoint(final IGeoPoint gp, final MapView mapView){
+        final AlertDialog.Builder taskNameDialog = new AlertDialog.Builder(this);
+        final EditText taskNameInput = new EditText(this);
+        taskNameInput.setText("");
+        taskNameInput.setHint(R.string.task_to_do);
+        taskNameDialog.setView(taskNameInput);
+        taskNameDialog.setPositiveButton(getString(R.string.proceed), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // Inserción de la tabla
+                    ContentValues cv = new ContentValues(2);
+                    cv.put("LATITUDE", gp.getLatitudeE6());
+                    cv.put("LONGITUDE", gp.getLongitudeE6());
+                    cv.put("TASK", taskNameInput.getText().toString().trim());
+                    cv.put("COMPLETED", false);
 
-        sqldb.insert(DB_NAME, null, cv);
+                    sqldb.insert(DB_NAME, null, cv);
+
+                    // Actualizar la lista
+                    updateTargetsOverlay(mapView);
+
+                    // Forzar actualización del canvas
+                    mapView.getController().scrollBy(1, 1);
+                    mapView.getController().scrollBy(-1, -1);
+                }
+            });
+
+        taskNameDialog.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    //
+                }
+            });
+        taskNameDialog.show();
+
     }
 
 
@@ -110,7 +141,9 @@ public class MapActivity extends Activity{
         Cursor c = sqldb.query(DB_NAME, sqlcols, null, null, null, null, null, null);
         c.moveToFirst();
         while (c.moveToNext()){
-            OverlayItem overlayItem = new OverlayItem("TEST_STRING_CHANGEME", "ANOTHER_TEST_STRING_CHANGEME",
+            OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(c.getInt(4) != 0 ?
+                                                                                R.string.completed_task :
+                                                                                R.string.uncompleted_task),
                                                       new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
 
             overlayItem.setMarker(locationMarker);
@@ -169,12 +202,7 @@ public class MapActivity extends Activity{
                             lastTouchTime = -1;
 
                             IGeoPoint geoPoint = fMapView.getProjection().fromPixels(X, Y);
-                            addPoint(geoPoint);
-                            updateTargetsOverlay(fMapView);
-
-                            // Forzar actualización
-                            fMapView.getController().scrollBy(1, 1);
-                            fMapView.getController().scrollBy(-1, -1);
+                            addPoint(geoPoint, fMapView);
                             return true;
                         }
                         else{
