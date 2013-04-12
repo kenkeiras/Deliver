@@ -52,6 +52,7 @@ public class MapActivity extends Activity{
     long lastTouchTime = -1;
     int lastX = 0;
     int lastY = 0;
+    MapView mapView = null;
 
     // Timeout del doble click
     private static final long DOUBLE_CLICK_TIMEOUT = 250;
@@ -92,7 +93,7 @@ public class MapActivity extends Activity{
      * @param mapView El mapa a actualizar si se añade.
      *
      */
-    private void addPoint(final IGeoPoint gp, final MapView mapView){
+    private void addPoint(final IGeoPoint gp){
         final AlertDialog.Builder taskNameDialog = new AlertDialog.Builder(this);
         final EditText taskNameInput = new EditText(this);
         taskNameInput.setText("");
@@ -110,11 +111,7 @@ public class MapActivity extends Activity{
                     sqldb.insert(DB_NAME, null, cv);
 
                     // Actualizar la lista
-                    updateTargetsOverlay(mapView);
-
-                    // Forzar actualización del canvas
-                    mapView.getController().scrollBy(1, 1);
-                    mapView.getController().scrollBy(-1, -1);
+                    updateTargetsOverlay();
                 }
             });
 
@@ -134,7 +131,7 @@ public class MapActivity extends Activity{
      * @param mapView La vista del mapa a actualizar.
      *
      */
-    private void updateTargetsOverlay(MapView mapView){
+    private void updateTargetsOverlay(){
         Drawable cLocationMarker = context.getResources().getDrawable(R.drawable.completed_marker);
         Drawable uLocationMarker = context.getResources().getDrawable(R.drawable.uncompleted_marker);
 
@@ -167,6 +164,10 @@ public class MapActivity extends Activity{
             });
 
         mapView.getOverlays().add(currentLocationOverlay);
+
+        // Forzar actualización del canvas
+        mapView.getController().scrollBy(1, 1);
+        mapView.getController().scrollBy(-1, -1);
     }
 
 
@@ -175,8 +176,6 @@ public class MapActivity extends Activity{
      *
      */
     private void setupMapView(){
-        MapView mapView = (MapView) findViewById(R.id.mapView);
-
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(13);
         mapView.getController().setCenter(INITIAL_POINT);
@@ -206,7 +205,7 @@ public class MapActivity extends Activity{
                             lastTouchTime = -1;
 
                             IGeoPoint geoPoint = fMapView.getProjection().fromPixels(X, Y);
-                            addPoint(geoPoint, fMapView);
+                            addPoint(geoPoint);
                             return true;
                         }
                         else{
@@ -217,7 +216,7 @@ public class MapActivity extends Activity{
                     return false;
                 }
             });
-        updateTargetsOverlay(mapView);
+        updateTargetsOverlay();
     }
 
 
@@ -235,6 +234,7 @@ public class MapActivity extends Activity{
 
         context = getApplicationContext();
         setContentView(R.layout.map);
+        mapView = (MapView) findViewById(R.id.mapView);
 
         setupDB();
         setupMapView();
