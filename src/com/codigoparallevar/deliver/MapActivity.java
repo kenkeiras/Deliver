@@ -40,6 +40,8 @@ public class MapActivity extends Activity{
 
     Context context = null;
     long lastTouchTime = -1;
+    int lastX = 0;
+    int lastY = 0;
 
     // Timeout del doble click
     private static final long DOUBLE_CLICK_TIMEOUT = 250;
@@ -68,8 +70,7 @@ public class MapActivity extends Activity{
         mapView.getController().setZoom(13);
         mapView.getController().setCenter(INITIAL_POINT);
 
-        // Se guarda el último lugar donde se tocó la pantalla
-        // Con dos clicks se pregunta por los datos para poner un marcador (por ahora simplemente se deja)
+        // Manejo de las interacciones con el mapa
         final MapView fMapView = mapView;
         mapView.setOnTouchListener(new View.OnTouchListener(){
                 @Override
@@ -81,7 +82,17 @@ public class MapActivity extends Activity{
 
                     Log.d("Deliver", "" + (time - lastTouchTime));
 
-                    if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    // Maneja el mapa arrastrando
+                    if (event.getAction() == MotionEvent.ACTION_MOVE){
+                        fMapView.getController().scrollBy(lastX - X, lastY - Y);
+
+                        lastX = X;
+                        lastY = Y;
+                    }
+                    // Si hace doble click deja un marcador
+                    else if (event.getAction() == MotionEvent.ACTION_DOWN){
+                        lastX = X;
+                        lastY = Y;
                         if ((time - lastTouchTime) < DOUBLE_CLICK_TIMEOUT){
                             lastTouchTime = -1;
 
