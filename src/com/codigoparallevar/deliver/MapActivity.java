@@ -139,15 +139,16 @@ public class MapActivity extends Activity{
 
         final ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
         Cursor c = sqldb.query(DB_NAME, sqlcols, null, null, null, null, null, null);
-        c.moveToFirst();
-        while (c.moveToNext()){
-            OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(c.getInt(4) != 0 ?
-                                                                                R.string.completed_task :
-                                                                                R.string.uncompleted_task),
-                                                      new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
+        if (c.moveToFirst()){
+            do{
+                OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(c.getInt(4) != 0 ?
+                                                                                    R.string.completed_task :
+                                                                                    R.string.uncompleted_task),
+                                                          new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
 
-            overlayItem.setMarker(locationMarker);
-            items.add(overlayItem);
+                overlayItem.setMarker(locationMarker);
+                items.add(overlayItem);
+            }while (c.moveToNext());
         }
         c.close();
 
