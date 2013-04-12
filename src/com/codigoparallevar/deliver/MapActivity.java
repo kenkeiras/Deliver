@@ -2,6 +2,7 @@ package com.codigoparallevar.deliver;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.ContentValues;
 import android.os.Bundle;
 
 import android.graphics.Canvas;
@@ -15,6 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.LinearLayout;
+
+import android.database.sqlite.*;
+import android.database.Cursor;
 
 
 import java.util.ArrayList;
@@ -38,6 +42,10 @@ import org.osmdroid.util.GeoPoint;
  */
 public class MapActivity extends Activity{
 
+    static SQLiteDatabase sqldb;
+    public static String DB_NAME = "DELIVER_DB";
+    static String[] sqlcols = new String[]{"_id", "LATITUDE", "LONGITUDE"};
+
     Context context = null;
     long lastTouchTime = -1;
     int lastX = 0;
@@ -56,6 +64,72 @@ public class MapActivity extends Activity{
     public static GeoPoint geoPointFromIGeoPoint(IGeoPoint igp){
         return new GeoPoint(igp.getLatitudeE6(),
                             igp.getLongitudeE6());
+    }
+
+
+    /**
+     * Prepara la base de datos.
+     *
+     */
+    private void setupDB(){
+        sqldb = this.openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+
+        // Crea la tabla si no existe
+        sqldb.execSQL("CREATE TABLE IF NOT EXISTS " + DB_NAME +
+                      " ( _id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                      " LATITUDE LONG, LONGITUDE LONG);");
+
+    }
+
+
+    /**
+     * Añade un punto a los objetivos.
+     *
+     * @param gp Las coordenadas del punto a añadir.
+     *
+     */
+    private void addPoint(IGeoPoint gp){
+        ContentValues cv = new ContentValues(2);
+        cv.put("LATITUDE", gp.getLatitudeE6());
+        cv.put("LONGITUDE", gp.getLongitudeE6());
+
+        sqldb.insert(DB_NAME, null, cv);
+    }
+
+
+    /**
+     * Actualiza la vista con los marcadores activados.
+     *
+     * @param mapView La vista del mapa a actualizar.
+     *
+     */
+    private void updateTargetsOverlay(MapView mapView){
+        Drawable locationMarker = context.getResources().getDrawable(R.drawable.marker);
+
+        final ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
+        Cursor c = sqldb.query(DB_NAME, sqlcols, null, null, null, null, null, null);
+        c.moveToFirst();
+        while (c.moveToNext()){
+            OverlayItem overlayItem = new OverlayItem("TEST_STRING_CHANGEME", "ANOTHER_TEST_STRING_CHANGEME",
+                                                      new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
+
+            overlayItem.setMarker(locationMarker);
+            items.add(overlayItem);
+        }
+        c.close();
+
+        ItemizedIconOverlay currentLocationOverlay = new ItemizedIconOverlay<OverlayItem>(
+            context, items,
+            new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+                    return true;
+                }
+                public boolean onItemLongPress(final int index, final OverlayItem item) {
+                    return true;
+                }
+            });
+
+        mapView.getOverlays().add(currentLocationOverlay);
     }
 
 
@@ -80,8 +154,6 @@ public class MapActivity extends Activity{
 
                     long time = System.currentTimeMillis();
 
-                    Log.d("Deliver", "" + (time - lastTouchTime));
-
                     // Maneja el mapa arrastrando
                     if (event.getAction() == MotionEvent.ACTION_MOVE){
                         fMapView.getController().scrollBy(lastX - X, lastY - Y);
@@ -97,28 +169,8 @@ public class MapActivity extends Activity{
                             lastTouchTime = -1;
 
                             IGeoPoint geoPoint = fMapView.getProjection().fromPixels(X, Y);
-
-                            OverlayItem overlayItem = new OverlayItem("Here", "Current Position",
-                                                                      geoPointFromIGeoPoint(geoPoint));
-
-                            Drawable locationMarker = context.getResources().getDrawable(R.drawable.marker);
-                            overlayItem.setMarker(locationMarker);
-
-                            final ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
-                            items.add(overlayItem);
-
-                            ItemizedIconOverlay currentLocationOverlay = new ItemizedIconOverlay<OverlayItem>(
-                                context, items,
-                                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                                        return true;
-                                    }
-                                    public boolean onItemLongPress(final int index, final OverlayItem item) {
-                                        return true;
-                                    }
-                                });
-
-                            fMapView.getOverlays().add(currentLocationOverlay);
+                            addPoint(geoPoint);
+                            updateTargetsOverlay(fMapView);
 
                             // Forzar actualización
                             fMapView.getController().scrollBy(1, 1);
@@ -133,6 +185,15 @@ public class MapActivity extends Activity{
                     return false;
                 }
             });
+        updateTargetsOverlay(mapView);
+    }
+
+
+    /** Al eliminar cerrar la base de datos. */
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        sqldb.close();
     }
 
     /** Called when the activity is first created. */
@@ -143,6 +204,8 @@ public class MapActivity extends Activity{
 
         context = getApplicationContext();
         setContentView(R.layout.map);
+
+        setupDB();
         setupMapView();
     }
 
