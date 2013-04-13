@@ -99,10 +99,11 @@ public class DBManager{
 
 
     /**
-     * A partir del índice de búsqueda devuelve el ID de un elemento.
+     * A partir del índice de búsqueda devuelve el ID de un elemento tomado de `getTasks'.
      *
      * @param index Número que ocupa el documento en la query.
      *
+     * @see #getTasks()
      */
     public static int getIdFromIndex(int index){
        Cursor c = sqldb.query(DB_NAME, sqlcols,
@@ -139,6 +140,7 @@ public class DBManager{
      * Devuelve los items marcados.
      *  Se puede recuperar el ID a partir del índice con `getIdFromIndex'.
      *
+     * @see #getIdFromIndex(int id)
      */
     public static List<Task> getTasks(){
 
@@ -164,8 +166,7 @@ public class DBManager{
     /**
      * Cerrar la conexión.
      *
-     * @nota Puede que dé problemas, no es recomendable
-     *       hacerlo a menos que sea realmente necesario.
+     *  Puede que dé problemas, no es recomendable hacerlo a menos que sea realmente necesario.
      *
      */
     public static void close(){
