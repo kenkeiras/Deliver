@@ -279,14 +279,9 @@ public class MapActivity extends Activity{
                     // Maneja el mapa arrastrando
                     if (event.getAction() == MotionEvent.ACTION_MOVE){
                         fMapView.getController().scrollBy(lastX - X, lastY - Y);
-
-                        lastX = X;
-                        lastY = Y;
                     }
                     // Si hace doble click deja un marcador
                     else if (event.getAction() == MotionEvent.ACTION_DOWN){
-                        lastX = X;
-                        lastY = Y;
                         if ((time - lastTouchTime) < DOUBLE_CLICK_TIMEOUT){
                             lastTouchTime = -1;
 
@@ -299,6 +294,14 @@ public class MapActivity extends Activity{
                         }
 
                     }
+                    // Si retira rápido el dedo suponemos que está señalando un objeto
+                    else if (event.getAction() == MotionEvent.ACTION_UP){
+                        if ((time - lastTouchTime) < DOUBLE_CLICK_TIMEOUT){
+                            return mapView.getOverlays().get(ITEM_OVERLAY_POS).onSingleTapUp(event, mapView);
+                        }
+                    }
+                    lastX = X;
+                    lastY = Y;
                     return false;
                 }
             });
