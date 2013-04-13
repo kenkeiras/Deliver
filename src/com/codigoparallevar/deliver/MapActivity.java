@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 
 import android.graphics.Canvas;
@@ -60,6 +59,13 @@ public class MapActivity extends Activity{
     // Posición de la capa de Marcadores
     private static final int ITEM_OVERLAY_POS = 0;
 
+    // Callback que actualiza el overlay cuando es llamado
+    private final Callback updateTargetsOverlayCallback = new Callback(){
+            public void call(){
+                updateTargetsOverlay();
+            }
+        };
+
     /**
      * Genera un GeoPoint a partir de un IGeoPoint.
      *
@@ -102,104 +108,6 @@ public class MapActivity extends Activity{
 
 
     /**
-     * Edita un elemento.
-     *
-     * @param index Índice del elemento a editar.
-     *
-     */
-    public void editElement(int index){
-        Resources res = getResources();
-        final int id = DBManager.getIdFromIndex(index);
-        final String name = DBManager.getNameFromID(id);
-
-        final CharSequence[] actions = {res.getString(R.string.toggle),
-                                        res.getString(R.string.remove),
-                                        res.getString(R.string.edit)};
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(name);
-        builder.setItems(actions, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    switch(which){
-                    case 0:
-                        DBManager.toggleTask(id);
-                        break;
-                    case 1:
-                        deleteElement(id);
-                        break;
-                    case 2:
-                        editElementName(id);
-                        break;
-                    }
-                    updateTargetsOverlay();
-                }
-            });
-
-        builder.create().show();
-
-    }
-
-
-    /**
-     * Elimina un marcador después de pedir la confirmación.
-     *
-     * @param id ID de la tarea a eliminar.
-     *
-     */
-    public void deleteElement(final int id){
-        final String name = DBManager.getNameFromID(id);
-
-        new AlertDialog.Builder(this)
-            .setTitle(name)
-            .setMessage(getString(R.string.do_you_wish_to_remove_task__before) +
-                        name +
-                        getString(R.string.do_you_wish_to_remove_task__after))
-            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        DBManager.deleteTask(id);
-                        updateTargetsOverlay();
-                    }
-                })
-            .setNegativeButton(R.string.no, null)
-            .show();
-    }
-
-
-    /**
-     * Edita el nombre de un marcador.
-     *
-     * @param id ID del elemento a editar.
-     *
-     */
-    private void editElementName(final int id){
-        final String prev_name = DBManager.getNameFromID(id);
-
-        final AlertDialog.Builder taskNameDialog = new AlertDialog.Builder(this);
-        final EditText taskNameInput = new EditText(this);
-        taskNameInput.setText(prev_name);
-        taskNameInput.setHint(R.string.task_to_do);
-        taskNameDialog.setView(taskNameInput);
-        taskNameDialog.setPositiveButton(getString(R.string.proceed), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    // Inserción de la tabla
-                    DBManager.updateTaskName(id, taskNameInput.getText().toString().trim());
-
-                    // Actualizar la lista
-                    updateTargetsOverlay();
-                }
-            });
-
-        taskNameDialog.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    //
-                }
-            });
-        taskNameDialog.show();
-    }
-
-
-    /**
      * Crea el overlay para los marcadores.
      *
      */
@@ -209,7 +117,7 @@ public class MapActivity extends Activity{
             new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                    editElement(index);
+                    CommonDialogs.editElement(context, index, updateTargetsOverlayCallback);
                     return true;
                 }
 
@@ -365,7 +273,7 @@ public class MapActivity extends Activity{
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
 
-        context = getApplicationContext();
+        context = this;
         setContentView(R.layout.map);
         mapView = (MapView) findViewById(R.id.mapView);
 
