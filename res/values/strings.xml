@@ -14,4 +14,6 @@
     <string name="do_you_wish_to_remove_task__after">”?</string>
     <string name="yes">Sí</string>
     <string name="no">No</string>
+    <string name="task_list">Lista de tareas</string>
+    <string name="map">Mapa</string>
 </resources>
