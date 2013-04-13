@@ -27,6 +27,7 @@ import android.database.Cursor;
 import java.util.ArrayList;
 import java.util.List;
 
+import static junit.framework.Assert.*;
 
 import org.osmdroid.api.IGeoPoint;
 
@@ -60,6 +61,9 @@ public class MapActivity extends Activity{
 
     // Punto en el que inicia la aplicación (Coruña)
     private static final GeoPoint INITIAL_POINT = new GeoPoint(43.365126,-8.411951);
+
+    // Posición de la capa de Marcadores
+    private static final int ITEM_OVERLAY_POS = 0;
 
     /**
      * Genera un GeoPoint a partir de un IGeoPoint.
@@ -184,34 +188,12 @@ public class MapActivity extends Activity{
 
 
     /**
-     * Actualiza la vista con los marcadores activados.
-     *
-     * @param mapView La vista del mapa a actualizar.
+     * Crea el overlay para los marcadores.
      *
      */
-    private void updateTargetsOverlay(){
-        Drawable cLocationMarker = context.getResources().getDrawable(R.drawable.completed_marker);
-        Drawable uLocationMarker = context.getResources().getDrawable(R.drawable.uncompleted_marker);
-
-        final ArrayList<OverlayItem> items = new ArrayList<OverlayItem>();
-        Cursor c = sqldb.query(DB_NAME, sqlcols, null, null, null, null, null, null);
-        if (c.moveToFirst()){
-            do{
-                boolean completed = c.getInt(4) != 0;
-
-                OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(completed ?
-                                                                                    R.string.completed_task :
-                                                                                    R.string.uncompleted_task),
-                                                          new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
-
-                overlayItem.setMarker(completed ? cLocationMarker: uLocationMarker);
-                items.add(overlayItem);
-            }while (c.moveToNext());
-        }
-        c.close();
-
-        ItemizedIconOverlay itemOverlay = new ItemizedIconOverlay<OverlayItem>(
-            context, items,
+    private void setupMarkerOverlay(){
+        ItemizedIconOverlay overlay = new ItemizedIconOverlay(
+            context, new ArrayList<OverlayItem>(),
             new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
@@ -233,7 +215,39 @@ public class MapActivity extends Activity{
                 }
             });
 
-        mapView.getOverlays().add(itemOverlay);
+        assertEquals(ITEM_OVERLAY_POS, mapView.getOverlays().size());
+        mapView.getOverlays().add(overlay);
+    }
+
+
+    /**
+     * Actualiza la vista con los marcadores activados.
+     *
+     * @param mapView La vista del mapa a actualizar.
+     *
+     */
+    private void updateTargetsOverlay(){
+        assertTrue("Marker overlay hasn't been created.", mapView.getOverlays().size() > ITEM_OVERLAY_POS);
+        Drawable cLocationMarker = context.getResources().getDrawable(R.drawable.completed_marker);
+        Drawable uLocationMarker = context.getResources().getDrawable(R.drawable.uncompleted_marker);
+        ItemizedIconOverlay itemOverlay = (ItemizedIconOverlay) mapView.getOverlays().get(ITEM_OVERLAY_POS);
+        itemOverlay.removeAllItems();
+
+        Cursor c = sqldb.query(DB_NAME, sqlcols, null, null, null, null, null, null);
+        if (c.moveToFirst()){
+            do{
+                boolean completed = c.getInt(4) != 0;
+
+                OverlayItem overlayItem = new OverlayItem(c.getString(3), getString(completed ?
+                                                                                    R.string.completed_task :
+                                                                                    R.string.uncompleted_task),
+                                                          new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
+
+                overlayItem.setMarker(completed ? cLocationMarker: uLocationMarker);
+                itemOverlay.addItem(overlayItem);
+            }while (c.moveToNext());
+        }
+        c.close();
 
         // Forzar actualización del canvas
         mapView.getController().scrollBy(1, 1);
@@ -249,6 +263,8 @@ public class MapActivity extends Activity{
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(13);
         mapView.getController().setCenter(INITIAL_POINT);
+
+        setupMarkerOverlay();
 
         // Manejo de las interacciones con el mapa
         final MapView fMapView = mapView;
