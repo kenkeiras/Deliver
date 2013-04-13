@@ -117,7 +117,7 @@ public class MapActivity extends Activity{
             new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                    CommonDialogs.editElement(context, index, updateTargetsOverlayCallback);
+                    CommonDialogs.editElement(context, DBManager.getIdFromIndex(index), updateTargetsOverlayCallback);
                     return true;
                 }
 

@@ -14,6 +14,7 @@ public class CommonDialogs{
     /**
      * Elimina un marcador después de pedir la confirmación.
      *
+     * @param context Contexto en el que se mostrará el diálogo.
      * @param id ID de la tarea a eliminar.
      * @param callback Callback a realizar cuando se elimina una tarea.
      *
@@ -43,7 +44,9 @@ public class CommonDialogs{
     /**
      * Edita el nombre de un marcador.
      *
+     * @param context Contexto en el que se mostrará el diálogo.
      * @param id ID del elemento a editar.
+     * @param callback Callback a realizar cuando se edite el nombre.
      *
      */
     public static void editElementName(final Context context, final int id, final Callback callback){
@@ -77,11 +80,12 @@ public class CommonDialogs{
     /**
      * Edita un elemento.
      *
+     * @param context Contexto en el que se mostrará el diálogo.
      * @param index Índice del elemento a editar.
+     * @param callback Callback a realizar cuando se produzca un cambio.
      *
      */
-    public static void editElement(final Context context, int index, final Callback callback){
-        final int id = DBManager.getIdFromIndex(index);
+    public static void editElement(final Context context, final int id, final Callback callback){
         final String name = DBManager.getNameFromID(id);
 
         final CharSequence[] actions = {context.getString(R.string.toggle),

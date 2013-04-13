@@ -28,6 +28,13 @@ public class PlainListActivity extends Activity{
     Context context = null;
 
 
+    // Callback que actualiza el overlay cuando es llamado
+    private final Callback refreshTaskListCallback = new Callback(){
+            public void call(){
+                refreshTaskList();
+            }
+        };
+
     /**
      * Manaja la creación de la lista.
      *
@@ -62,8 +69,8 @@ public class PlainListActivity extends Activity{
 
             final Task task = items.get(position);
             if (task != null){
-                v.setClickable(true);
                 if (checkBox != null){
+                    checkBox.setClickable(true);
                     checkBox.setChecked(task.isCompleted());
                     checkBox.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View view) {
@@ -123,9 +130,9 @@ public class PlainListActivity extends Activity{
      * Maneja una pulsación prolongada sobre un elemento de la lista.
      *
      * @param position Posición del elemento en cuestión.
-     * @note STUB
      */
     public void longTouchCallback(int position){
+        CommonDialogs.editElement(context, DBManager.getIdFromIndex(position), refreshTaskListCallback);
     }
 
 
@@ -187,6 +194,6 @@ public class PlainListActivity extends Activity{
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
 
-        context = getApplicationContext();
+        context = this;
     }
 }
