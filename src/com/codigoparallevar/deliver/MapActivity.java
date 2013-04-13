@@ -2,9 +2,10 @@ package com.codigoparallevar.deliver;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.ContentValues;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 
@@ -14,6 +15,9 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -381,6 +385,44 @@ public class MapActivity extends Activity{
                 }
             });
         updateTargetsOverlay();
+    }
+
+
+    /**
+     * Despliegue del menú.
+     *
+     * @param menu
+     *
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.map_menu, menu);
+        return true;
+    }
+
+
+    /**
+     * Descripción: Maneja la acción de seleccionar un item del menú.
+     *
+     * @param item Item seleccionado.
+     *
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent i;
+
+        // Handle item selection
+        switch (item.getItemId()) {
+        case R.id.show_element_list_icon:
+            i = new Intent();
+            i.setClass(this, PlainListActivity.class);
+            startActivity(i);
+            return true;
+
+        default:
+            return super.onOptionsItemSelected(item);
+        }
     }
 
 
