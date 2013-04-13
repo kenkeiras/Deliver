@@ -159,7 +159,7 @@ public class MapActivity extends Activity{
      */
     public String getNameFromID(int id){
        Cursor c = sqldb.query(DB_NAME, sqlcols,
-                              "_ID = ?", new String[]{id + ""},
+                              "_id = ?", new String[]{id + ""},
                               null, null, null);
 
        c.moveToFirst();
@@ -193,7 +193,7 @@ public class MapActivity extends Activity{
                     case 0:
                         sqldb.execSQL("UPDATE " + DB_NAME +" SET " +
                                       "COMPLETED = NOT COMPLETED " +
-                                      "WHERE _ID = " + id);
+                                      "WHERE _id = " + id);
                         break;
                     case 1:
                         deleteElement(id);
@@ -229,7 +229,7 @@ public class MapActivity extends Activity{
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         sqldb.execSQL("DELETE FROM " + DB_NAME +
-                                      " WHERE _ID = " + id);
+                                      " WHERE _id = " + id);
                         updateTargetsOverlay();
                     }
                 })
@@ -258,7 +258,7 @@ public class MapActivity extends Activity{
                     ContentValues cv = new ContentValues(1);
                     cv.put("TASK", taskNameInput.getText().toString().trim());
 
-                    sqldb.update(DB_NAME, cv, "_ID = ?", new String[]{id + ""});
+                    sqldb.update(DB_NAME, cv, "_id = ?", new String[]{id + ""});
 
                     // Actualizar la lista
                     updateTargetsOverlay();
