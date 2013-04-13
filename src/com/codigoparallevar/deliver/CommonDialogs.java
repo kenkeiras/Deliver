@@ -82,7 +82,7 @@ public class CommonDialogs{
      * Edita un elemento.
      *
      * @param context Contexto en el que se mostrará el diálogo.
-     * @param index Índice del elemento a editar.
+     * @param id Índice del elemento a editar.
      * @param callback Callback a realizar cuando se produzca un cambio.
      *
      */
