@@ -20,3 +20,8 @@ Para la generación del instalador se ejecutará 'ant debug', o 'ant debug insta
 ### Librerías
 
 Además de las librerías de android se ha utilizado [osmdroid](https://code.google.com/p/osmdroid/) (Licencia Apache 2.0/CC3), para dibujar los mapas en base a OpenStreetMap.
+
+### Manejo
+
+Es posible desplazarse por el mapa arrastrandolo, y hacer zoom de la forma habitual. Para añadur una tarea hay que hacer doble-click sobre el punto donde se añadirá.
+Se puede navegar entre el mapa ya la lista usando el menú, en el mapa los puntos se puede editar pulsando sobre ellos, en la lista habrá que mantener pulsado el elemento para hacerlo.
