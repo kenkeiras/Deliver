@@ -3,6 +3,7 @@ package com.codigoparallevar.deliver;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 
 import android.widget.*;
 
@@ -90,7 +91,8 @@ public class CommonDialogs{
 
         final CharSequence[] actions = {context.getString(R.string.toggle),
                                         context.getString(R.string.remove),
-                                        context.getString(R.string.edit)};
+                                        context.getString(R.string.edit),
+                                        context.getString(R.string.center_map)};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(name);
@@ -98,16 +100,29 @@ public class CommonDialogs{
                 public void onClick(DialogInterface dialog, int which) {
                     switch(which){
                     case 0:
+                        // Cambiar estado de la tarea
                         DBManager.toggleTask(id);
                         if (callback != null){
                             callback.call();
                         }
                         break;
+
                     case 1:
+                        // Confirmar que se quiere eliminar la tarea
                         deleteElement(context, id, callback);
                         break;
+
                     case 2:
+                        // Preguntar el nombre de la tarea
                         editElementName(context, id, callback);
+                        break;
+
+                    case 3:
+                        // Centrar el mapa en la tarea
+                        Intent i = new Intent();
+                        i.setClass(context, MapActivity.class);
+                        i.putExtra("id", id);
+                        context.startActivity(i);
                         break;
                     }
                 }

@@ -268,6 +268,17 @@ public class MapActivity extends Activity{
     }
 
 
+    /**
+     * Centra la vista en una tarea.
+     *
+     * @param id ID de la tarea a centrar.
+     *
+     */
+    public void centerOnTask(int id){
+        mapView.getController().setCenter(DBManager.getTask(id).getLocation());
+    }
+
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -279,6 +290,11 @@ public class MapActivity extends Activity{
 
         DBManager.initialize(context);
         setupMapView();
+
+        int centerTaskId = getIntent().getIntExtra("id", -1);
+        if (centerTaskId != -1){
+            centerOnTask(centerTaskId);
+        }
     }
 
 }

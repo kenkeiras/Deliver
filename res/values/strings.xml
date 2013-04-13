@@ -10,6 +10,7 @@
     <string name="toggle">Completado/Incompleto</string>
     <string name="remove">Eliminar</string>
     <string name="edit">Editar</string>
+    <string name="center_map">Centrar mapa en la tarea</string>
     <string name="do_you_wish_to_remove_task__before">¿Desea eliminar la tarea “</string>
     <string name="do_you_wish_to_remove_task__after">”?</string>
     <string name="yes">Sí</string>

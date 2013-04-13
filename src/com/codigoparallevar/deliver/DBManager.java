@@ -137,6 +137,21 @@ public class DBManager{
 
 
     /**
+     * Constuye un objeto Task en base a la posición actual del cursor.
+     *
+     * @param c Cursor en base del que se construirá la tarea.
+     *
+     */
+    private static Task buildTaskFromCursor(Cursor c){
+        boolean completed = c.getInt(4) != 0;
+
+        return new Task(c.getInt(0),
+                        c.getString(3), completed,
+                        new GeoPoint((int) c.getLong(1), (int) c.getLong(2)));
+    }
+
+
+    /**
      * Devuelve los items marcados.
      *  Se puede recuperar el ID a partir del índice con `getIdFromIndex'.
      *
@@ -150,16 +165,29 @@ public class DBManager{
 
         if (c.moveToFirst()){
             do{
-                boolean completed = c.getInt(4) != 0;
-
-                taskList.add(new Task(c.getInt(0),
-                                      c.getString(3), completed,
-                                      new GeoPoint((int) c.getLong(1), (int) c.getLong(2))));
+                taskList.add(buildTaskFromCursor(c));
             }while (c.moveToNext());
         }
         c.close();
 
         return taskList;
+    }
+
+
+    /**
+     * Devuelve una tarea en base a su ID.
+     *
+     * @param id ID del punto.
+     *
+     */
+    public static Task getTask(int id){
+        Cursor c = sqldb.query(DB_NAME, sqlcols, "_id = ?", new String[]{id + ""}, null, null, null, null);
+
+        c.moveToFirst();
+        Task task = buildTaskFromCursor(c);
+        c.close();
+
+        return task;
     }
 
 
