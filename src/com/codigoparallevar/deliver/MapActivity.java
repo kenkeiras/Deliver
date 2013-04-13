@@ -192,8 +192,7 @@ public class MapActivity extends Activity{
                                       "WHERE _ID = " + id);
                         break;
                     case 1:
-                        sqldb.execSQL("DELETE FROM " + DB_NAME +
-                                      " WHERE _ID = " + id);
+                        deleteElement(id);
                         break;
                     case 2:
                         editElementName(id);
@@ -205,6 +204,33 @@ public class MapActivity extends Activity{
 
         builder.create().show();
 
+    }
+
+
+    /**
+     * Elimina un marcador después de pedir la confirmación.
+     *
+     * @param id ID de la tarea a eliminar.
+     *
+     */
+    public void deleteElement(final int id){
+        final String name = getNameFromID(id);
+
+        new AlertDialog.Builder(this)
+            .setTitle(name)
+            .setMessage(getString(R.string.do_you_wish_to_remove_task__before) +
+                        name +
+                        getString(R.string.do_you_wish_to_remove_task__after))
+            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sqldb.execSQL("DELETE FROM " + DB_NAME +
+                                      " WHERE _ID = " + id);
+                        updateTargetsOverlay();
+                    }
+                })
+            .setNegativeButton(R.string.no, null)
+            .show();
     }
 
 
