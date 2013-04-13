@@ -148,6 +148,25 @@ public class MapActivity extends Activity{
 
 
     /**
+     * Devuelve el nombre de una tarea a partir del ID.
+     *
+     * @param id ID de la tarea.
+     *
+     */
+    public String getNameFromID(int id){
+       Cursor c = sqldb.query(DB_NAME, sqlcols,
+                              "_ID = ?", new String[]{id + ""},
+                              null, null, null);
+
+       c.moveToFirst();
+       final String name = c.getString(c.getColumnIndex("TASK"));
+       c.close();
+
+       return name;
+    }
+
+
+    /**
      * Edita un elemento.
      *
      * @param index Índice del elemento a editar.
@@ -156,13 +175,14 @@ public class MapActivity extends Activity{
     public void editElement(int index){
         Resources res = getResources();
         final int id = getIdFromIndex(index);
+        final String name = getNameFromID(id);
 
         final CharSequence[] actions = {res.getString(R.string.toggle),
                                         res.getString(R.string.remove),
                                         res.getString(R.string.edit)};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(res.getString(R.string.choose_action));
+        builder.setTitle(name);
         builder.setItems(actions, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
                     switch(which){
@@ -176,7 +196,8 @@ public class MapActivity extends Activity{
                                       " WHERE _ID = " + id);
                         break;
                     case 2:
-                        Log.d("Deliver", "Edición no implementada");
+                        editElementName(id);
+                        break;
                     }
                     updateTargetsOverlay();
                 }
@@ -184,6 +205,42 @@ public class MapActivity extends Activity{
 
         builder.create().show();
 
+    }
+
+
+    /**
+     * Edita el nombre de un marcador.
+     *
+     * @param id ID del elemento a editar.
+     *
+     */
+    private void editElementName(final int id){
+        final String prev_name = getNameFromID(id);
+
+        final AlertDialog.Builder taskNameDialog = new AlertDialog.Builder(this);
+        final EditText taskNameInput = new EditText(this);
+        taskNameInput.setText(prev_name);
+        taskNameInput.setHint(R.string.task_to_do);
+        taskNameDialog.setView(taskNameInput);
+        taskNameDialog.setPositiveButton(getString(R.string.proceed), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // Inserción de la tabla
+                    ContentValues cv = new ContentValues(1);
+                    cv.put("TASK", taskNameInput.getText().toString().trim());
+
+                    sqldb.update(DB_NAME, cv, "_ID = ?", new String[]{id + ""});
+
+                    // Actualizar la lista
+                    updateTargetsOverlay();
+                }
+            });
+
+        taskNameDialog.setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    //
+                }
+            });
+        taskNameDialog.show();
     }
 
 
@@ -197,15 +254,7 @@ public class MapActivity extends Activity{
             new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                    Toast.makeText(
-                        context,
-                        item.mDescription + "\n" + item.mTitle + "\n"
-                        + item.mGeoPoint.getLatitudeE6() + " : "
-                        + item.mGeoPoint.getLongitudeE6(),
-                        Toast.LENGTH_LONG).show();
-
                     editElement(index);
-                    Log.d("Deliver", "" + index);
                     return true;
                 }
 
