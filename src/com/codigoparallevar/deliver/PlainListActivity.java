@@ -1,18 +1,23 @@
 package com.codigoparallevar.deliver;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import android.util.Log;
+
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 
 import android.widget.*;
 
-import android.database.sqlite.*;
-import android.database.Cursor;
+
+import java.util.List;
 
 
 /**
@@ -20,36 +25,60 @@ import android.database.Cursor;
  *
  */
 public class PlainListActivity extends Activity{
+    Context context = null;
+
+
     /**
      * Manaja la creación de la lista.
      *
      */
-    class PlainListViewBinder implements SimpleCursorAdapter.ViewBinder {
-        public boolean setViewValue(View view, Cursor cursor, int columnIndex){
-            // Setup checkbox
-            if (columnIndex == cursor.getColumnIndex("COMPLETED")){
-                final CheckBox cb = (CheckBox) view;
-                final int id = cursor.getInt(cursor.getColumnIndex("_id"));
-                cb.setChecked(cursor.getInt(columnIndex) != 0);
-                cb.setOnClickListener(new View.OnClickListener() {
+    private class PlainListAdapter extends ArrayAdapter<Task> {
+        List<Task> items;
+
+        public PlainListAdapter(Context context, int textViewResourceId, List<Task> items) {
+            super(context, textViewResourceId, items);
+            this.items = items;
+        }
+
+
+        /**
+         * Llamado por el ListView, genera la vista para un elemento e una posición.
+         *
+         * @param position Posición del elemento a generar.
+         * @param convertView Si existe (no es null), se creará sobre esta vista.
+         * @param parent Vista que contiene a convertView (no se usa).
+         *
+         */
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+            if (v == null) {
+                LayoutInflater layout = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                v = layout.inflate(R.layout.task_list_item, null);
+            }
+
+            CheckBox checkBox = (CheckBox) v.findViewById(R.id.task_completed);
+            TextView taskName = (TextView) v.findViewById(R.id.task_name);
+
+            final Task task = items.get(position);
+            if (task != null){
+                v.setClickable(true);
+                if (checkBox != null){
+                    checkBox.setChecked(task.isCompleted());
+                    checkBox.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View view) {
-                            sqldb.execSQL("update " + DB_NAME + " set "+
-                                          "COMPLETED = " + (cb.isChecked() ? 1 : 0) + " " +
-                                          "WHERE _id = " + id);
+                            DBManager.toggleTask(task.getId());
                         }
                     });
-                return true;
+                }
+
+                if (taskName != null){
+                    taskName.setText(task.getName());
+                }
             }
-            else {
-                return false;
-            }
+            return v;
         }
     }
-
-
-    static SQLiteDatabase sqldb;
-    public static String DB_NAME = "DELIVER_DB";
-    static String[] sqlcols = new String[]{"_id", "LATITUDE", "LONGITUDE", "TASK", "COMPLETED"};
 
 
     /**
@@ -106,45 +135,20 @@ public class PlainListActivity extends Activity{
      *
      */
     public void refreshTaskList(){
-        String[] uitables = new String[]{"COMPLETED", "TASK"};
-        int[] fields = new int[]{R.id.task_completed,
-                                 R.id.task_name};
-
-        Cursor c = sqldb.query(DB_NAME, this.sqlcols,
-                               null, null, null, null, null, null);
-
-        startManagingCursor(c);
-        int rows = c.getCount();
+        List<Task> taskList = DBManager.getTasks();
 
         // Si no se encuentran datos se vuelve al mapa.
-        if (rows == 0){
+        if (taskList.size() == 0){
             Intent i = new Intent();
             i.setClass(this, MapActivity.class);
-            sqldb.close();
             startActivity(i);
         }
         // Datos encontrados
         else{
             ListView listView = (ListView) findViewById(R.id.task_list);
 
-            SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                this,
-                R.layout.task_list_item,
-                c,
-                uitables,
-                fields
-            );
-
-            adapter.setViewBinder(new PlainListViewBinder());
+            PlainListAdapter adapter = new PlainListAdapter(this, R.layout.plain_list, taskList);
             listView.setAdapter(adapter);
-
-            int i;
-            for (i = 1; i < (rows - 1); i++){
-                if (listView.getChildAt(i) != null){
-                    listView.getChildAt(i).setClickable(true);
-                }
-            }
-
         }
     }
 
@@ -155,25 +159,9 @@ public class PlainListActivity extends Activity{
     @Override
     public void onResume(){
         super.onResume();
-        sqldb = this.openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
-        this.refreshTaskList();
-    }
 
-
-    /** Al eliminar cerrar la base de datos. */
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-        sqldb.close();
-    }
-
-
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.plain_list);
-        sqldb = this.openOrCreateDatabase(DB_NAME, MODE_PRIVATE, null);
+        DBManager.initialize(context);
 
         // Prepara el manejador para los clicks en la lista
         ListView listView = (ListView) findViewById(R.id.task_list);
@@ -183,5 +171,22 @@ public class PlainListActivity extends Activity{
                     return true;
                 }
             });
+        this.refreshTaskList();
+    }
+
+
+    /** Al eliminar cerrar la base de datos. */
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+    }
+
+
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+
+        context = getApplicationContext();
     }
 }
