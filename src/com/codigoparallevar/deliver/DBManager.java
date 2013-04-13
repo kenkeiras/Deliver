@@ -24,6 +24,10 @@ public class DBManager{
     private static String[] sqlcols = new String[]{"_id", "LATITUDE", "LONGITUDE", "TASK", "COMPLETED"};
 
 
+    /** Clase estática */
+    private DBManager(){}
+
+
     /**
      * Añade un punto a los objetivos.
      *

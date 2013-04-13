@@ -12,6 +12,11 @@ import android.widget.*;
  *
  */
 public class CommonDialogs{
+
+    /** Clase estática */
+    private CommonDialogs(){}
+
+
     /**
      * Elimina un marcador después de pedir la confirmación.
      *
